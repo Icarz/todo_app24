@@ -2,7 +2,8 @@ const todoForm = document.querySelector("form");
 const todoInput = document.getElementById("todo-input");
 const todoListUl = document.getElementById("todo-list");
 
-let allToDos = [];
+let allToDos = getTodos();
+updateTodolist();
 
 todoForm.addEventListener("submit", function (e) {
   e.preventDefault();
@@ -12,8 +13,13 @@ todoForm.addEventListener("submit", function (e) {
 function addTodo() {
   const todoText = todoInput.value.trim();
   if (todoText.length > 0) {
-    allToDos.push(todoText);
+    const todoObject = {
+      Text: todoText,
+      completed: false,
+    };
+    allToDos.push(todoObject);
     updateTodolist();
+    saveTodos();
     todoInput.value = "";
   }
 }
@@ -29,6 +35,7 @@ function updateTodolist() {
 function createTodoItem(todo, todoIndex) {
   const todoId = "todo-" + todoIndex;
   const todoLI = document.createElement("li");
+  const todoText = todo.text;
   todoLI.className = "todo";
   todoLI.innerHTML = `  
     <input type="checkbox" id=${todoId} />
@@ -44,7 +51,7 @@ function createTodoItem(todo, todoIndex) {
       </svg>
     </label>
     <label class="todo-text" for=${todoId}>
-      ${todo}</label>
+      ${todoText}</label>
     <button class="delete-button">
       <svg
         fill="var(--secondary-color)"
@@ -59,5 +66,35 @@ function createTodoItem(todo, todoIndex) {
         />
       </svg>
     </button>`;
+
+  const deleteButton = todoLI.querySelector(".delete-button");
+  deleteButton.addEventListener("click", () => {
+    deleteTodoItem(todoIndex);
+  });
+  const checkbox = todoLI.querySelector("input");
+  checkbox.addEventListener("change", () => {
+    allToDos[todoIndex].completed = checkbox.checked;
+    saveTodos();
+  });
+  checkbox.checked = todo.completed;
   return todoLI;
+}
+// delete logic //
+
+function deleteTodoItem(todoIndex) {
+  allToDos = allToDos.filter((_, i) => i !== todoIndex);
+  saveTodos();
+  updateTodolist();
+}
+
+// local Storage  //
+
+function saveTodos() {
+  const todoJson = JSON.stringify(allToDos);
+  localStorage.setItem("todos", todoJson);
+}
+
+function getTodos() {
+  const todos = localStorage.getItem("todos") || "[]";
+  return JSON.parse(todos);
 }
